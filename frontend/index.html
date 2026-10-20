@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSE Department Complaint System · MGM's College of Engineering, Nanded</title>
+<link rel="icon" href="logo.png">
+<style>
+:root{
+  --bg:#f6f3fa; --card:#fff; --ink:#1f1f1f; --mute:#6b6b6b; --line:#e4e2dd;
+  --pri:#3b1466; --pri2:#2a0d4c; --pri-text:#3b1466; --gold:#f5c518; --ok:#3d6b52; --warn:#b3752f; --bad:#b3312c;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --bg:#15101c; --card:#1f1829; --ink:#ece8f2; --mute:#a59bb5; --line:#372d47; --pri:#5a24a0; --pri2:#7436c4; --pri-text:#cdaef0; }
+}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);line-height:1.5}
+header{background:linear-gradient(100deg,#1c0836,#32115a 55%,#4d1d85);color:#fff;padding:10px 20px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:5;border-bottom:3px solid var(--gold)}
+header .logo{width:46px;height:46px;border-radius:50%;background:#fff;padding:2px;flex:0 0 auto}
+header .brand{flex:1;min-width:0}header .brand small{display:block;font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:#e6d6f7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header h1{font-size:16px;margin:0;font-weight:700;color:#fff}header span{font-size:13px;color:#e6d6f7}
+header button.ghost{color:#fff;border-color:#ffffff66}header button.ghost:hover{background:#ffffff22}
+header #notes span{color:var(--mute)}
+main{max-width:1050px;margin:26px auto;padding:0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 18px 20px;margin-bottom:16px}
+h2{margin:0 0 12px;font-size:17px;font-weight:600}h3{margin:0 0 8px;font-size:14px;font-weight:600}
+input,select,textarea{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:var(--bg);color:var(--ink);margin-bottom:10px}
+textarea{min-height:110px;resize:vertical}label{font-size:12.5px;color:var(--mute);display:block;margin-bottom:4px}
+button{background:var(--pri);color:#fff;border:0;border-radius:8px;padding:9px 16px;font:inherit;cursor:pointer}
+button:hover{background:var(--pri2)}button.ghost{background:transparent;color:var(--pri);border:1px solid var(--line)}button.sm{padding:6px 11px;font-size:13px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.row>*{flex:1;min-width:120px}.row>button{flex:0 0 auto}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}.tabs button{background:transparent;color:var(--mute);border:1px solid var(--line);white-space:nowrap;padding:10px 12px;font-size:13px}.tabs button.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+.b{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;margin-right:5px;background:var(--bg);border:1px solid var(--line);color:var(--mute)}
+.b.crit{background:#fbe7e4;color:var(--bad);border-color:#f0cec8}.b.high{background:#faf0e2;color:#9a5b1f;border-color:#f0ddbe}.b.med{background:#f6f2df;color:#8a7524;border-color:#e8dfb8}.b.low{background:#e7f0ea;color:var(--ok);border-color:#cfe1d4}
+.b.st{background:#e5eef2;color:#3a6f83;border-color:#cfe0e6}.b.esc{background:#f3e3ea;color:#95375f;border-color:#e7cfda}
+.cc{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.cc h3 small{color:var(--mute);font-weight:400}.mute{color:var(--mute);font-size:13px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 18px;margin:10px 0;padding:10px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.meta div{font-size:13px;color:var(--ink)}.meta div b{display:block;font-size:11.5px;font-weight:600;color:var(--mute);margin-bottom:2px}
+ul.tl{margin:8px 0 0;padding-left:18px;font-size:13px}.act{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}.act>*{margin:0;flex:1;min-width:110px}.act button{flex:0 0 auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px}.stat b{font-size:22px;display:block;color:var(--pri)}
+.bar{display:flex;align-items:center;gap:8px;font-size:13px;margin:4px 0}.bar i{display:block;height:12px;background:var(--pri);border-radius:4px}.bar span:first-child{width:110px}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:11px 18px;border-radius:8px;color:#fff;display:none;z-index:9;max-width:90%}
+#notes{position:absolute;right:14px;top:56px;background:var(--card);color:var(--ink);width:330px;max-height:360px;overflow:auto;border:1px solid var(--line);border-radius:12px;padding:10px;display:none;box-shadow:0 8px 24px #0002}
+#notes p{margin:0;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}.hide{display:none!important}
+.result{background:#eaf2ec;border:1px solid #cfe1d4;border-radius:10px;padding:12px;margin-top:12px;font-size:14px}
+
+.auth{display:block;max-width:480px;margin:40px auto;border-radius:16px;overflow:hidden;background:var(--card);border:1px solid var(--line)}
+.authf{padding:26px 28px 28px}.ahead{text-align:center;padding:30px 28px 6px}.ahead h1{margin:0 0 6px;font-size:20px;color:var(--pri-text);font-weight:600}.ahead p{margin:0;color:var(--mute);font-size:13.5px}.req{color:var(--bad);font-weight:700;margin-left:2px}.act{align-items:flex-end}.act label{margin-bottom:4px}.act input,.act select{margin-bottom:0}.err{color:var(--bad);font-size:12px;min-height:16px;margin:-6px 0 6px}input.bad{border-color:var(--bad)}
+.pw{position:relative}.pw input{padding-right:64px}.pw button{position:absolute;right:6px;top:5px;padding:4px 9px;font-size:12px;background:transparent;color:var(--pri);border:1px solid var(--line)}
+.rules{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;font-size:12px;color:var(--mute);margin:-4px 0 8px}.rules .ok{color:var(--ok)}
+.meter{height:5px;background:#e5e7eb;border-radius:9px;margin:0 0 10px;overflow:hidden}.meter i{display:block;height:100%;width:0;transition:.2s}
+.ptitle{margin:0 0 14px}button:disabled{opacity:.6;cursor:not-allowed}.rl{background:#ffffff33;border-radius:99px;padding:2px 10px;font-size:12px}
+@media(max-width:760px){.auth{grid-template-columns:1fr}}
+/* ---------- College landing (hero) ---------- */
+body.landing main{max-width:none;margin:0;padding:0}
+.hero{min-height:calc(100vh - 66px);display:flex;align-items:center;justify-content:center;gap:48px;flex-wrap:wrap;padding:40px 24px;color:#fff;
+  background:linear-gradient(115deg,rgba(22,6,44,.92) 0%,rgba(50,17,90,.74) 55%,rgba(22,6,44,.90) 100%),url(campus.jpg) center bottom/cover no-repeat}
+.hero-txt{flex:1 1 380px;max-width:560px}
+.hero-txt .crest{width:92px;height:92px;border-radius:50%;background:#fff;padding:3px;box-shadow:0 6px 24px #0006;margin-bottom:18px}
+.hero-txt .trust{font-size:14px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);font-weight:600;margin:0 0 6px}
+.hero-txt h1{font-size:clamp(26px,4.2vw,40px);line-height:1.15;margin:0 0 10px;font-weight:800;color:#fff}
+.hero-txt h1 em{font-style:normal;color:var(--gold)}
+.hero-txt .city{margin:0 0 18px;font-size:15px;color:#e6d6f7}
+.hero-txt .sys{display:inline-block;background:var(--gold);color:#2b0f4d;font-weight:700;padding:7px 16px;border-radius:99px;font-size:14px;margin-bottom:16px}
+.hero-txt p.lead{margin:0 0 18px;color:#efe6fa;font-size:15px;max-width:480px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}.chips span{background:#ffffff1f;border:1px solid #ffffff44;border-radius:99px;padding:5px 12px;font-size:12.5px;color:#fff}
+.hero .auth{margin:0;flex:0 1 460px;width:100%;box-shadow:0 18px 50px #0007;border:0;border-top:5px solid var(--gold);color:var(--ink)}
+.hero .auth .ahead h1{color:var(--pri-text)}
+.footer{background:#16062c;color:#d8c3ee;text-align:center;padding:16px;font-size:13px;border-top:3px solid var(--gold)}
+/* ---------- Landing nav / pages ---------- */
+#nav{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#nav button{background:transparent;color:#fff;border:1px solid #ffffff55;padding:7px 14px;font-size:13.5px}
+#nav button:hover{background:#ffffff22}#nav button.gold{background:var(--gold);color:#2b0f4d;border-color:var(--gold);font-weight:700}#nav button.gold:hover{background:#ffd940}
+.hero.land{text-align:center;flex-direction:column;gap:0}.hero.land .hero-txt{max-width:760px;flex:0 0 auto}.hero.land .crest{margin-left:auto;margin-right:auto}.hero.land p.lead{margin-left:auto;margin-right:auto;max-width:600px}.hero.land .chips{justify-content:center}
+.cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:6px 0 22px}.cta button{padding:13px 28px;font-size:16px;font-weight:700;border-radius:99px}
+.cta .gold{background:var(--gold);color:#2b0f4d}.cta .gold:hover{background:#ffd940}.cta .outl{background:transparent;color:#fff;border:2px solid #ffffffaa}.cta .outl:hover{background:#ffffff22}
+.how{padding:44px 20px 50px;max-width:1050px;margin:0 auto;text-align:center}.how h2{color:var(--pri-text);font-size:24px;margin:0 0 6px}.how>p{margin:0 0 24px;color:var(--mute)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}.step{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--pri);border-radius:14px;padding:20px 16px}
+.step i{font-style:normal;display:inline-flex;width:36px;height:36px;border-radius:50%;background:var(--pri);color:#fff;align-items:center;justify-content:center;font-weight:700;margin-bottom:10px}.step h3{font-size:15px;color:var(--pri-text)}.step p{margin:0;font-size:13.5px;color:var(--mute)}
+.back{background:transparent;color:#fff;border:1px solid #ffffff66;margin-bottom:16px;padding:7px 14px;font-size:13px}.back:hover{background:#ffffff22}
+.hero.authpg{flex-direction:column;gap:0}.hero.authpg .auth{flex:0 0 auto;max-width:460px}.hero.authpg .crest{width:70px;height:70px;border-radius:50%;background:#fff;padding:3px;margin-bottom:14px}
+@media(max-width:700px){#nav button{padding:6px 10px;font-size:12.5px}}
+/* ---------- Welcome pop-up ---------- */
+#welcome{position:fixed;inset:0;background:#1a0a2dcc;z-index:20;display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px)}
+#welcome.show{display:flex}
+#welcome .box{background:var(--card);color:var(--ink);max-width:460px;width:100%;border-radius:18px;overflow:hidden;box-shadow:0 24px 70px #000a;text-align:center;animation:pop .35s ease}
+#welcome .top{background:linear-gradient(120deg,#1c0836,#4d1d85);padding:26px 20px 18px;border-bottom:4px solid var(--gold)}
+#welcome .top img{width:84px;height:84px;border-radius:50%;background:#fff;padding:3px;box-shadow:0 4px 16px #0006}
+#welcome .top h3{margin:12px 0 0;font-size:13px;letter-spacing:.8px;text-transform:uppercase;color:var(--gold)}
+#welcome .top h2{margin:4px 0 0;font-size:19px;color:#fff;line-height:1.25}
+#welcome .body{padding:20px 24px 24px}#welcome .body h2{font-size:18px;color:var(--pri);margin:0 0 8px}
+#welcome .body p{margin:0 0 16px;color:var(--mute);font-size:14px}
+@keyframes pop{from{transform:scale(.9);opacity:0}to{transform:none;opacity:1}}
+.evbox{border:2px dashed var(--line);border-radius:12px;padding:12px 14px 8px;margin:2px 0 12px;background:var(--bg)}
+.evbox>label{margin-bottom:4px;color:var(--ink);font-weight:600;font-size:14px}
+.evhint{font-size:13px;color:var(--mute);margin-bottom:8px}
+#evprev{display:flex;align-items:center;gap:12px;margin:4px 0 6px;flex-wrap:wrap}
+#evprev img{max-height:110px;max-width:100%;border-radius:8px;border:1px solid var(--line)}
+.evfile{font-size:13px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+#evmsg{font-size:13px;font-weight:600;margin:4px 0 4px}
+</style>
+</head>
+<body>
+<header><img class="logo" src="logo.png" alt="MGM logo"><div class="brand"><h1>CSE Department Complaint System</h1><small>Mahatma Gandhi Mission's College of Engineering, Nanded</small></div><nav id="nav"><button onclick="home()">Home</button><button onclick="goAuth('student','login')">Student Login</button><button onclick="goAuth('student','register')">Student Register</button><button class="gold" onclick="goAuth('staff','login')">Departmental Login</button></nav><span id="who"></span>
+<button class="ghost sm hide" id="bell" onclick="toggleNotes()">Alerts <b id="cnt"></b></button>
+<button class="ghost sm hide" id="out" onclick="logout()">Logout</button><div id="notes"></div></header>
+<main id="app"></main>
+<div class="footer">© Mahatma Gandhi Mission's College of Engineering, Nanded · Department of Computer Science &amp; Engineering</div>
+<div id="toast"></div>
+<div id="welcome"><div class="box"><div class="top"><img src="logo.png" alt=""><h3>Welcome to</h3><h2>Mahatma Gandhi Mission's<br>College of Engineering, Nanded</h2></div>
+<div class="body"><h2>CSE Department Complaint System</h2><p>Raise your concern, track it live, and get it resolved by the right person - quickly and transparently.</p><button onclick="closeWelcome()" style="width:100%">Get Started</button></div></div></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const S = { token: sessionStorage.token || "", role: sessionStorage.role || "", name: sessionStorage.name || "", level: +sessionStorage.level || 0, dept: sessionStorage.dept || "" };
+const PRI = { Critical: "crit", High: "high", Medium: "med", Low: "low" };
+const msg = d => Array.isArray(d.detail) ? d.detail.map(e => e.msg.replace("Value error, ", "")).join(". ") : (d.detail || "Something went wrong");
+const when = t => t ? new Date(t + "Z").toLocaleString() : "-";
+
+function toast(t, ok = true) { const e = $("#toast"); e.textContent = t; e.style.background = ok ? "#3d6b52" : "#b3312c"; e.style.display = "block"; setTimeout(() => e.style.display = "none", 3500); }
+async function api(path, { method = "GET", body, form } = {}) {
+  const h = S.token ? { Authorization: "Bearer " + S.token } : {}; let b = form;
+  if (body) { h["Content-Type"] = "application/json"; b = JSON.stringify(body); }
+  const r = await fetch(path, { method, headers: h, body: b });
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401 && S.token) { logout(); throw new Error("Session expired. Please log in again"); }
+  if (!r.ok) throw new Error(msg(d)); return d;
+}
+const run = async f => { try { await f(); } catch (e) { toast(e.message, false); } };
+
+function logout() { WHO_PAGE = false; sessionStorage.clear(); S.token = S.role = S.name = S.dept = ""; render(); }
+function render() {
+  const on = !!S.token; document.body.classList.toggle("landing", !on);
+  $("#who").innerHTML = on ? `${S.name === roleLabel() || roleLabel().endsWith(S.name) ? "" : esc(S.name) + " "}<span class="rl">${roleLabel()}</span>` : ""; $("#out").classList.toggle("hide", !on); $("#bell").classList.toggle("hide", !on);
+  $("#nav").classList.toggle("hide", on);
+  if (!on) return WHO_PAGE ? authView(WHO_TAB) : home();
+  ({ student: studentView, officer: staffView, authority: staffView, admin: adminView })[S.role]();
+  loadNotes();
+}
+
+/* ---------- AUTH ---------- */
+let CFG = { domain: "mgmcen.ac.in", example: "s23_surname_firstname@mgmcen.ac.in", sections_by_year: { SY: ["A", "B", "C"], TY: ["A", "B", "C"], BTech: ["A", "B"] }, academic_year_start: 2026, year_by_admission_offset: { "1": "SY", "2": "TY", "3": "BTech" } }, resetEmail = "";
+const EMAIL_RE = /^[\w.+-]+@[\w-]+(\.[\w-]+)+$/;
+const PW_RULES = [["8+ characters", p => p.length >= 8], ["Uppercase letter", p => /[A-Z]/.test(p)], ["Lowercase letter", p => /[a-z]/.test(p)], ["A number", p => /\d/.test(p)], ["Special character", p => /[^\w\s]/.test(p)]];
+const setErr = (id, m) => { const e = $("#" + id + "_e"); if (e) e.textContent = m || ""; const i = $("#" + id); if (i) i.classList.toggle("bad", !!m); return !m; };
+const vEmail = (id = "e", dom = false) => {
+  const raw = $("#" + id).value.trim();
+  if (/[A-Z]/.test(raw)) return setErr(id, "Email must be in lowercase only");
+  const v = raw;
+  return setErr(id, !v ? "Email is required" : !EMAIL_RE.test(v) ? "Enter a valid email address" : dom && !v.endsWith("@" + CFG.domain) ? `Use your college email (@${CFG.domain})` : dom && !/^s\d{2}_[a-z]+(_[a-z]+)+$/.test(v.split("@")[0]) ? `Student email looks like ${CFG.example}` : "");
+};
+const NAME_RE = /^[A-Za-z][A-Za-z .'-]*$/;
+const vName = () => { const v = $("#n").value.trim(); return setErr("n", v.length < 2 || v.length > 60 ? "Name must be 2-60 characters" : !NAME_RE.test(v) ? "Name can only contain letters, spaces, apostrophes and hyphens" : ""); };
+const vConfirm = () => setErr("p2", $("#p2").value !== $("#p").value ? "Passwords do not match" : "");
+const vPw = () => {
+  const v = $("#p").value, ok = PW_RULES.filter(r => r[1](v)).length;
+  if ($("#rules")) { $("#rules").innerHTML = PW_RULES.map(r => `<span class="${r[1](v) ? "ok" : ""}">${r[1](v) ? "✓" : "○"} ${r[0]}</span>`).join(""); const m = $(".meter i"); m.style.width = ok * 20 + "%"; m.style.background = ok < 3 ? "#b3312c" : ok < 5 ? "#b3752f" : "#3d6b52"; }
+  return setErr("p", !v ? "Password is required" : ok < PW_RULES.length ? "Password does not meet all requirements" : "");
+};
+const pwField = (id, label, on = "") => `<label>${label}</label><div class="pw"><input id="${id}" type="password" autocomplete="${id === "p2" ? "new-password" : "current-password"}" ${on}><button type="button" onclick="eye('${id}',this)">Show</button></div><div class="err" id="${id}_e"></div>`;
+const eye = (id, b) => { const i = $("#" + id), h = i.type === "password"; i.type = h ? "text" : "password"; b.textContent = h ? "Hide" : "Show"; };
+const busy = (on, label) => { const b = $("#go"); if (!b) return; b.dataset.t = b.dataset.t || b.textContent; b.disabled = on; b.textContent = on ? label : b.dataset.t; };
+const roleLabel = () => S.role === "officer" ? (S.dept ? "Departmental · " + S.dept : "Departmental") : S.role === "authority" ? (S.level == 2 ? "Principal" : "HOD") : S.role.charAt(0).toUpperCase() + S.role.slice(1);
+
+let WHO = "student", WHO_PAGE = false, WHO_TAB = "login";
+const goAuth = (who, tab) => { WHO = who; authView(tab); };
+function home() {
+  WHO_PAGE = false; window.scrollTo(0, 0);
+  $("#app").innerHTML = `<section class="hero land"><div class="hero-txt"><img class="crest" src="logo.png" alt=""><p class="trust">Welcome to</p><h1>Mahatma Gandhi Mission's <em>College of Engineering</em></h1><p class="city">Nanded, Maharashtra</p><span class="sys">CSE Department Complaint System</span>
+  <p class="lead">A single place for students to report issues in teaching, labs, classrooms, timetable, exams and placements. Every complaint is routed to the right department and tracked until it is resolved.</p>
+  <div class="cta"><button class="gold" onclick="goAuth('student','login')">Get Started</button></div></div></section>
+  <section class="how"><h2>How it works</h2><p>From complaint to resolution in four simple steps</p><div class="steps">
+  <div class="step"><i>1</i><h3>Submit</h3><p>Describe your problem in plain words. Attach evidence or stay anonymous if you wish.</p></div>
+  <div class="step"><i>2</i><h3>AI understands</h3><p>The system reads your complaint, finds the category and sets its priority.</p></div>
+  <div class="step"><i>3</i><h3>Routed</h3><p>It goes straight to the right department: lab, class, exam, timetable or placement cell.</p></div>
+  <div class="step"><i>4</i><h3>Track &amp; escalate</h3><p>Follow progress live. Missed deadlines escalate to the HOD and Principal automatically.</p></div></div></section>`;
+}
+function authView(tab = "login") {
+  const strong = `<div class="rules" id="rules"></div><div class="meter"><i></i></div>`;
+  const forms = {
+    login: `<label>College email</label><input id="e" type="email" autocomplete="username" placeholder="Your college email" oninput="vEmail()"><div class="err" id="e_e"></div>${pwField("p", "Password")}<div class="err" id="fe"></div><button id="go" style="width:100%" onclick="doLogin()">Login</button><p class="mute" style="text-align:center;margin:12px 0 0">Everyone signs in here with their own college email. Your account decides which dashboard opens (Student, Departmental, HOD, Principal or Admin).</p>`,
+    register: `<label>Full name</label><input id="n" maxlength="60" oninput="vName()"><div class="err" id="n_e"></div><label>College email</label><input id="e" type="email" placeholder="${CFG.example}" oninput="vEmail('e',true);onEmailChange()"><div class="err" id="e_e"></div>
+    <div class="row"><div><label>Your class <span class="mute">(detected from email)</span></label><input id="yr" disabled placeholder="Type your email above"></div><div><label>Section</label><select id="sec"></select></div></div>
+    ${pwField("p", "Create password", 'oninput="vPw()"')}${strong}${pwField("p2", "Confirm password", 'oninput="vConfirm()"')}<div class="err" id="fe"></div><button id="go" style="width:100%" onclick="doRegister()">Create student account</button>`,
+    forgot: `<div id="s1"><label>College email</label><input id="e" type="email" oninput="vEmail()"><div class="err" id="e_e"></div><div class="err" id="fe"></div><button id="go" style="width:100%" onclick="doForgot()">Send OTP</button></div><div id="s2" class="hide"><label>6-digit OTP</label><input id="o" maxlength="6" inputmode="numeric"><div class="err" id="o_e"></div>${pwField("p", "New password", 'oninput="vPw()"')}${strong}${pwField("p2", "Confirm new password", 'oninput="vConfirm()"')}<div class="err" id="fe2"></div><button id="go" style="width:100%" onclick="doReset()">Reset password</button></div>`
+  };
+  const staff = WHO === "staff", tabs = staff ? ["login", "forgot"] : ["login", "register", "forgot"];
+  if (staff && tab === "register") tab = "login";
+  WHO_PAGE = true; WHO_TAB = tab; window.scrollTo(0, 0);
+  $("#app").innerHTML = `<section class="hero authpg"><button class="back" onclick="home()">&larr; Back to Home</button><img class="crest" src="logo.png" alt="">
+  <div class="auth"><div class="ahead"><h1>${staff ? "Departmental Login" : "Student Portal"}</h1><p>${staff ? "Departmental staff, HOD, Principal or Admin" : "Login or create your student account"}</p></div>
+  <div class="authf"><div class="tabs">${tabs.map(t => `<button class="${t === tab ? "on" : ""}" onclick="authView('${t}')">${{ login: "Login", register: "New student? Register", forgot: "Forgot password" }[t]}</button>`).join("")}</div>${forms[tab]}</div></div></section>`;
+  $("#app").onkeydown = e => { if (e.key === "Enter" && e.target.tagName === "INPUT") $("#go")?.click(); };
+  if ($("#rules")) vPw();
+  if ($("#yr")) onEmailChange();
+}
+function detectYear(email) {
+  const m = /^s(\d{2})_/.exec((email || "").split("@")[0].toLowerCase());
+  if (!m) return null;
+  const offset = CFG.academic_year_start - (2000 + parseInt(m[1], 10));
+  return CFG.year_by_admission_offset[String(offset)] || null;
+}
+function onEmailChange() {
+  const year = detectYear($("#e").value);
+  $("#yr").value = year || "";
+  const secs = CFG.sections_by_year[year] || [];
+  $("#sec").innerHTML = secs.length ? secs.map(s => `<option value="${s}">${s}</option>`).join("")
+    : `<option value="">Enter your email first</option>`;
+}
+async function doLogin() {
+  const a = vEmail(), b = setErr("p", $("#p").value ? "" : "Password is required"); if (!(a && b)) return;
+  $("#fe").textContent = ""; busy(true, "Signing in...");
+  try {
+    const d = await api("/auth/login", { method: "POST", form: new URLSearchParams({ username: $("#e").value.trim(), password: $("#p").value }) });
+    Object.assign(S, { token: d.access_token, role: d.role, name: d.name, level: d.level || 0, dept: d.department || "" }); ["token", "role", "name", "level", "dept"].forEach(k => sessionStorage[k] = S[k]); render();
+  } catch (e) { $("#fe").textContent = e.message; busy(false); }
+}
+async function doRegister() {
+  if (![vName(), vEmail("e", true), vPw(), vConfirm()].every(Boolean)) return;
+  if (!detectYear($("#e").value)) { $("#fe").textContent = "This email's admission year doesn't match an active class (SY/TY/BTech)."; return; }
+  $("#fe").textContent = ""; busy(true, "Creating...");
+  try { await api("/auth/register", { method: "POST", body: { name: $("#n").value, email: $("#e").value, password: $("#p").value, section: $("#sec").value } }); toast("Account created. Please log in."); authView("login"); }
+  catch (e) { $("#fe").textContent = e.message; busy(false); }
+}
+async function doForgot() {
+  if (!vEmail()) return; busy(true, "Sending...");
+  try {
+    const d = await api("/auth/forgot", { method: "POST", body: { email: $("#e").value.trim() } }); resetEmail = $("#e").value.trim(); $("#s1").remove();
+    $("#s2").classList.remove("hide"); $("#s2").insertAdjacentHTML("afterbegin", `<div class="result" style="margin:0 0 12px">${d.debug_otp ? `Demo mode OTP: <b>${d.debug_otp}</b>` : "If the email exists, an OTP was sent to it."}</div>`);
+  } catch (e) { $("#fe").textContent = e.message; busy(false); }
+}
+async function doReset() {
+  const o = setErr("o", /^\d{6}$/.test($("#o").value.trim()) ? "" : "Enter the 6-digit OTP"); if (![o, vPw(), vConfirm()].every(Boolean)) return;
+  busy(true, "Updating...");
+  try { await api("/auth/reset", { method: "POST", body: { email: resetEmail, otp: $("#o").value.trim(), new_password: $("#p").value } }); toast("Password updated. Please log in."); authView("login"); }
+  catch (e) { $("#fe2").textContent = e.message; busy(false); }
+}
+const ministats = (sel, l) => {
+  const open = l.filter(c => !["Resolved", "Closed"].includes(c.status)), over = open.filter(c => c.sla_due && new Date(c.sla_due + "Z") < new Date()).length;
+  $(sel).innerHTML = [["Total", l.length], ["Open", open.length], ["Resolved", l.length - open.length], ["Escalated", l.filter(c => c.escalation_level > 0 && !c.direct_to_hod).length], ["Overdue", over]].map(([k, v]) => `<div class="stat"><b>${v}</b>${k}</div>`).join("");
+};
+
+/* ---------- SHARED COMPLAINT CARD ---------- */
+function card(c, mode) {
+  const tl = c.history.map(h => `<li>${esc(h.status)} <span class="mute">${when(h.at)}${h.remarks ? " - " + esc(h.remarks) : ""}</span></li>`).join("");
+  let act = "";
+  if (mode === "student" && ["Resolved", "Closed"].includes(c.status))
+    act = (c.rating ? `<span class="mute">You rated ${c.rating}/5</span>` : `<div><label>Rating <span class="req">*</span></label><select id="r${c.id}"><option value="5">5 - Excellent</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1 - Poor</option></select></div><div style="flex:2"><label>Feedback <span class="mute">(optional)</span></label><input id="f${c.id}"></div><button class="sm" onclick="rate(${c.id})">Rate</button>`) + `<button class="ghost sm" onclick="reopen(${c.id})">Reopen</button>`;
+  if (mode === "staff" && !["Closed"].includes(c.status)) {
+    const lab = S.dept === "Lab Assistant";
+    act = `<div><label>Status <span class="req">*</span></label><select id="s${c.id}" onchange="qStar(${c.id})"><option>In Progress</option>${lab ? "<option>Query</option>" : ""}<option>Resolved</option><option>Closed</option></select></div><div style="flex:2"><label>${lab ? "Remark / Query" : "Remark"} <span class="req hide" id="rs${c.id}">*</span></label><input id="m${c.id}" placeholder="${lab ? "Type a remark, or your question if status is Query" : "Remarks"}"></div><button class="sm" onclick="upd(${c.id})">Update</button>`;
+  }
+  if (mode === "admin") act = `<div><label>Reassign to <span class="req">*</span></label><select id="a${c.id}">${(window.OFF || []).map(o => `<option value="${o.id}">${esc(o.name)}</option>`).join("")}</select></div><button class="sm" onclick="assign(${c.id})">Reassign</button>`;
+  return `<div class="cc"><h3>${esc(c.title)} <small>${esc(c.code)}</small></h3>
+  <span class="b ${PRI[c.priority]}">${esc(c.priority)}</span><span class="b">${esc(c.category)}</span><span class="b st">${esc(c.status)}</span>
+  ${c.direct_to_hod ? `<span class="b esc">Sent directly to HOD</span>` : c.escalation_level ? `<span class="b esc">Escalated L${c.escalation_level}</span>` : ""}${c.sentiment !== "Neutral" ? `<span class="b">${esc(c.sentiment)}</span>` : ""}${c.is_anonymous ? `<span class="b">Anonymous</span>` : ""}${c.duplicate_count ? `<span class="b">${c.duplicate_count + 1} similar reports</span>` : ""}
+  <p style="margin:8px 0">${esc(c.description)}</p>
+  <div class="meta">
+    <div><b>Submitted by</b>${esc(c.student_name)}${c.student_class ? " (" + esc(c.student_class) + ")" : ""}</div>
+    ${c.lab_number ? `<div><b>Lab</b>Lab ${c.lab_number}</div>` : ""}
+    <div><b>Assigned to</b>${esc(c.assigned_to || "Not yet assigned")}</div>
+    <div><b>Deadline</b>${when(c.sla_due)}${["Resolved", "Closed"].includes(c.status) ? "" : (new Date(c.sla_due + "Z") < new Date() ? ` <span class="b esc">Overdue</span>` : "")}</div>${mode === "student" ? "" : `<div><b>AI confidence</b>${Math.round(c.confidence * 100)}%</div>`}
+    ${c.keywords.length ? `<div><b>Key terms</b>${esc(c.keywords.join(", "))}</div>` : ""}
+    ${c.has_attachment ? `<div><b>Attachment</b><a href="#" onclick="openFile(${c.id});return false">View file</a></div>` : ""}
+  </div>
+  <ul class="tl">${tl}</ul>${act ? `<div class="act">${act}</div>` : ""}</div>`;
+}
+const openFile = id => run(async () => { const r = await fetch(`/complaints/${id}/attachment`, { headers: { Authorization: "Bearer " + S.token } }); if (!r.ok) throw new Error("Cannot open file"); window.open(URL.createObjectURL(await r.blob())); });
+
+/* ---------- STUDENT ---------- */
+function studentView() {
+  const catList = [
+    ["Teaching & Syllabus", "Faculty not covering syllabus, lectures not conducted, doubts not cleared, teaching quality."],
+    ["Lab & Equipment", "Computers/systems not working, software missing, printers, servers, lab machines."],
+    ["Classroom Infrastructure", "Projector, wifi, fans/lights, benches, washrooms - the classroom/building itself."],
+    ["Timetable & Attendance", "Timetable clashes, wrong attendance marked, schedule/batch issues."],
+    ["Exams & Marks", "Hall tickets, results, marks missing, revaluation, question paper errors."],
+    ["Projects & Placements", "Project guide issues, internship/placement problems, company visits."],
+    ["Ragging & Harassment", "Ragging, bullying, harassment or threats - goes straight to the HOD."],
+    ["Other", "Anything that doesn't fit above - goes to the Admin Desk."],
+  ];
+  $("#app").innerHTML = `<h2 class="ptitle">Student Dashboard</h2><div class="grid" id="sst"></div><div class="card"><h2>Submit a complaint</h2><p class="mute" style="margin:-6px 0 10px"><span class="req">*</span> Required field. A photo or PDF is optional, but if you attach one it must be clear and related to your problem.</p>
+  <details style="margin-bottom:10px"><summary style="cursor:pointer;color:var(--mute);font-size:13px">What category will the AI pick? (based on your title + description)</summary>
+  <div style="margin-top:8px;display:grid;gap:4px;font-size:12.5px">${catList.map(([n, d]) => `<div><b>${n}:</b> <span class="mute">${d}</span></div>`).join("")}</div></details>
+  <label>Title <span class="req">*</span></label><input id="t" maxlength="120"><label>Describe the problem (20-2000 characters) <span class="req">*</span> <span id="len"></span></label><textarea id="d" maxlength="2000"></textarea>
+  <div class="evbox"><label>Photo or PDF evidence <span class="mute">(optional; jpg, png or pdf, max 5 MB)</span></label><div class="evhint" id="evhint"></div><input id="fl" type="file" accept=".jpg,.jpeg,.png,.pdf" onchange="evPick()"><div id="evprev"></div><div class="err" id="evmsg" role="alert"></div></div><label style="display:flex;gap:8px;align-items:center;margin:0 0 10px"><input id="an" type="checkbox" style="width:auto;margin:0"> Submit anonymously</label>
+  <label>Type of problem <span class="req">*</span></label><div id="catwarn" class="hide" style="background:#fff4e5;border:1px solid #f0a020;color:#8a5a00;padding:8px 10px;border-radius:8px;margin:6px 0;font-size:13px"></div>
+  <select id="cat" onchange="refreshLock()">${catList.map(([n]) => `<option value="${n}">${n}</option>`).join("")}</select>
+  <div id="labbox" class="hide"><label>Which lab? <span class="req">*</span> <span class="mute">(mention the lab number)</span></label><select id="labno"><option value="">-- Select lab number --</option>${[1,2,3,4,5,6,7,8,9,10].map(n => `<option value="${n}">Lab ${n}</option>`).join("")}</select></div>
+  <button id="subbtn" onclick="submitC()">Submit complaint</button><div id="result"></div></div>
+  <div class="card"><h2>My complaints</h2><div id="list"></div></div>`;
+  labSel(); $("#d").oninput = e => { $("#len").textContent = `(${e.target.value.length}/2000)`; scheduleCheck(); }; $("#t").oninput = scheduleCheck; myList();
+}
+const labSel = () => { $("#labbox").classList.toggle("hide", $("#cat").value !== "Lab & Equipment"); evHint(); };
+/* Evidence upload: hint changes with the problem type; the server does the real check (not blank, related to the issue) */
+const EV_HINT = {
+  "Lab & Equipment": "Attach a clear photo of the faulty item, such as the computer, monitor, keyboard, mouse or printer, or a screenshot of the error. Pictures of anything else are not accepted.",
+  "Classroom Infrastructure": "Attach a clear photo of the problem, such as the projector, fan, light, bench, board or washroom. Pictures of anything else are not accepted.",
+  "Teaching & Syllabus": "Attach a photo or screenshot of the related document, such as the syllabus, notes or timetable.",
+  "Timetable & Attendance": "Attach a photo or screenshot of the timetable or attendance sheet.",
+  "Exams & Marks": "Attach a photo or screenshot of the hall ticket, marksheet, result or question paper.",
+  "Projects & Placements": "Attach a photo or screenshot of the related letter, email or project document.",
+  "Ragging & Harassment": "You may attach screenshots or photos as proof. Blank files are not accepted.",
+  "Other": "Attach any clear photo or PDF that explains the problem. Blank files are not accepted."
+};
+const evHint = () => { const h = $("#evhint"); if (h) h.textContent = EV_HINT[$("#cat").value] || ""; };
+const evErr = m => { const e = $("#evmsg"); if (e) e.textContent = m || ""; };
+function evClear() { $("#fl").value = ""; evPick(); }
+function evPick() {
+  const inp = $("#fl"), box = $("#evprev"), f = inp.files[0]; box.innerHTML = ""; evErr("");
+  if (!f) return;
+  const ext = (f.name.split(".").pop() || "").toLowerCase();
+  if (!["jpg", "jpeg", "png", "pdf"].includes(ext)) { inp.value = ""; return evErr("Only JPG, PNG or PDF files are allowed."); }
+  if (f.size === 0) { inp.value = ""; return evErr("This file is empty. Please choose a file that has content."); }
+  if (f.size > 5 * 1048576) { inp.value = ""; return evErr("File must be under 5 MB."); }
+  box.innerHTML = (ext === "pdf" ? `<div class="evfile">PDF: ${esc(f.name)}</div>` : `<img alt="Selected evidence" src="${URL.createObjectURL(f)}">`) + `<button type="button" class="ghost sm" onclick="evClear()">Remove</button>`;
+}
+/* Live "wrong problem type" guard: if the text clearly belongs to another type (e.g. a lab issue
+   but "Classroom Infrastructure" chosen), warn, lock every other option except the right one, and block Submit. */
+let checkTimer, checkSeq = 0;
+const scheduleCheck = () => { clearTimeout(checkTimer); checkTimer = setTimeout(checkCategory, 500); };
+let curSuggest = null;
+function lockCategory(suggested) { curSuggest = suggested || null; refreshLock(); }
+function refreshLock() {
+  const sel = $("#cat"), warn = $("#catwarn"), btn = $("#subbtn"), sg = curSuggest;
+  [...sel.options].forEach(o => o.disabled = false);
+  if (sg && sel.dataset.auto !== sg) { sel.value = sg; sel.dataset.auto = sg; }   // AI picks the problem type automatically
+  if (!sg) delete sel.dataset.auto;
+  if (sg) {
+    const wrong = sel.value !== sg;
+    warn.classList.remove("hide");
+    warn.innerHTML = wrong ? `<b>Wrong problem type selected.</b> Your description looks like a <b>${esc(sg)}</b> problem. Please select <b>${esc(sg)}</b> to submit. (If this is not what you meant, edit your description.)`
+                           : `AI detected the problem type automatically: <b>${esc(sg)}</b>. Your complaint will be routed accordingly.`;
+    warn.style.background = wrong ? "#fff4e5" : "#e8f7ee"; warn.style.borderColor = wrong ? "#f0a020" : "#3cb371"; warn.style.color = wrong ? "#8a5a00" : "#1d6b3f";
+    btn.disabled = wrong; btn.title = wrong ? `Select "${sg}" to submit` : "";
+  } else { warn.classList.add("hide"); btn.disabled = false; btn.title = ""; }
+  labSel();
+}
+async function checkCategory() {
+  const my = ++checkSeq, fd = new FormData(); fd.append("title", $("#t").value); fd.append("description", $("#d").value);
+  try { const r = await api("/complaints/check-category", { method: "POST", form: fd }); if (my === checkSeq) lockCategory(r.suggested); }
+  catch (e) { if (my === checkSeq) lockCategory(null); }      // if the check fails, don't block the student - the server re-checks on submit
+}
+const myList = () => run(async () => { const l = await api("/complaints/my"); ministats("#sst", l); $("#list").innerHTML = l.map(c => card(c, "student")).join("") || `<p class="mute">No complaints yet.</p>`; });
+const submitC = () => run(async () => {
+  const t = $("#t").value.trim(), d = $("#d").value.trim();
+  if (t.length < 5) throw new Error("Title must be at least 5 characters");
+  if (d.length < 20) throw new Error("Description must be at least 20 characters");
+  const isLab = $("#cat").value === "Lab & Equipment"; if (isLab && !$("#labno").value) throw new Error("Please select the lab number for a lab complaint");
+  evErr(""); const f = $("#fl").files[0]; if (f && f.size === 0) throw new Error("The selected file is empty"); if (f && f.size > 5 * 1048576) throw new Error("File must be under 5 MB");
+  const fd = new FormData(); fd.append("title", t); fd.append("description", d); fd.append("anonymous", $("#an").checked); fd.append("category", $("#cat").value); if (isLab) fd.append("lab_number", $("#labno").value); if (f) fd.append("file", f);
+  const sb = $("#subbtn"); sb.dataset.t = sb.dataset.t || sb.textContent; let c;
+  try { if (f) { sb.disabled = true; sb.textContent = "Checking your attachment..."; } c = await api("/complaints", { method: "POST", form: fd }); }
+  catch (e) { if (/^Attachment/i.test(e.message)) evErr(e.message); throw e; }
+  finally { sb.textContent = sb.dataset.t; refreshLock(); }
+  $("#result").innerHTML = `<div class="result"><b>${esc(c.code)} submitted.</b><br>Routed to <b>${esc(c.assigned_to || "admin")}</b> under <b>${esc(c.category)}</b>.${c.duplicate_of ? "<br>Similar complaint already exists, your report was linked to it." : ""}</div>`;
+  ["t", "d", "fl"].forEach(i => $("#" + i).value = ""); evPick(); $("#an").checked = false; lockCategory(null); myList(); loadNotes();
+});
+const rate = id => run(async () => { await api(`/complaints/${id}/feedback`, { method: "POST", body: { rating: +$("#r" + id).value, comment: $("#f" + id).value } }); toast("Thanks for your feedback"); myList(); });
+const reopen = id => run(async () => { await api(`/complaints/${id}/reopen`, { method: "POST" }); toast("Complaint reopened"); myList(); });
+
+/* ---------- OFFICER / AUTHORITY ---------- */
+function staffView() {
+  $("#app").innerHTML = `<h2 class="ptitle">${roleLabel()} Dashboard</h2><div class="grid" id="sst"></div><div id="astats"></div><div class="card"><div class="row"><h2 style="flex:1;margin:0">${S.role === "authority" ? "Direct & escalated complaints" : "Assigned complaints"}</h2><input id="q" oninput="staffList()" placeholder="Search..." style="max-width:220px;margin:0">
+  <select id="flt" onchange="staffList()" style="max-width:190px;margin:0"><option value="">All statuses</option>${["Assigned", "In Progress", ...(S.dept === "Lab Assistant" ? ["Query"] : []), "Escalated", "Reopened", "Resolved", "Closed"].map(s => `<option>${s}</option>`).join("")}</select></div><div id="list" style="margin-top:14px"></div></div>`;
+  if (S.role === "authority") api("/analytics").then(a => $("#astats").innerHTML = `<div class="card"><h2>Analytics</h2>${statsHTML(a)}</div>`).catch(() => {});
+  staffList();
+}
+const ORDER = { Critical: 0, High: 1, Medium: 2, Low: 3 };
+const staffList = () => run(async () => {
+  const all = await api("/complaints/assigned"); ministats("#sst", all); const f = $("#flt").value, q = $("#q").value.toLowerCase(), l = all.filter(c => (!f || c.status === f) && (!q || (c.title + c.description + c.code + c.category).toLowerCase().includes(q))).sort((a, b) => ORDER[a.priority] - ORDER[b.priority] || b.id - a.id);
+  $("#list").innerHTML = l.map(c => card(c, "staff")).join("") || `<p class="mute">Nothing here.</p>`;
+});
+const qStar = id => $("#rs" + id)?.classList.toggle("hide", $("#s" + id).value !== "Query");
+const upd = id => run(async () => { if ($("#s" + id).value === "Query" && !$("#m" + id).value.trim()) throw new Error("Please write your question for the student in Remarks"); await api(`/complaints/${id}/status`, { method: "PATCH", body: { status: $("#s" + id).value, remarks: $("#m" + id).value || null } }); toast("Status updated"); (S.role === "admin" ? adminList : staffList)(); loadNotes(); });
+
+/* ---------- ADMIN ---------- */
+function adminView() {
+  $("#app").innerHTML = `<h2 class="ptitle">Admin Dashboard</h2><div class="card"><div class="row"><h2 style="flex:1;margin:0">Analytics</h2><button class="ghost sm" onclick="runEsc()">Run escalation check now</button></div><div id="stats" style="margin-top:12px"></div></div>
+  <div class="card"><h2>All complaints</h2><div id="list"></div></div>
+  <div class="card"><h2>Create staff account</h2><p class="mute" style="margin:-6px 0 10px"><span class="req">*</span> Required field</p><div class="row" style="align-items:flex-end"><div><label>Name <span class="req">*</span></label><input id="un" placeholder="Name"></div><div><label>Email <span class="req">*</span></label><input id="ue" placeholder="Email"></div><div><label>Password <span class="req">*</span></label><input id="up" type="password" placeholder="Password"></div><div><label>Role <span class="req">*</span></label><select id="ur" onchange="depSel()"><option value="officer">Departmental</option><option>authority</option><option>admin</option></select></div><div><label>Department / Level <span class="req">*</span></label><select id="ud" onchange="depSel2()"></select></div><div id="clsbox" style="display:none"><label>Class <span class="req">*</span></label><select id="uy" style="width:auto"><option>SY</option><option>TY</option><option>BTech</option></select> <select id="usec" style="width:auto"><option>A</option><option>B</option><option>C</option></select></div><button onclick="mkUser()">Create</button></div></div>
+  <div class="card"><h2>Class Incharges</h2><p class="mute" style="margin:-6px 0 10px">Complaints from a class go only to that class's Class Incharge.</p><div id="cis"></div></div>
+  <div class="card"><h2>Users</h2><div id="users"></div></div><div class="card"><h2>Audit log</h2><div id="audit"></div></div>`;
+  adminLoad();
+}
+const bars = o => { const m = Math.max(1, ...Object.values(o)); return Object.entries(o).map(([k, v]) => `<div class="bar"><span>${esc(k)}</span><i style="width:${v / m * 200 + 4}px"></i><span>${v}</span></div>`).join("") || `<span class="mute">No data</span>`; };
+const statsHTML = a => `<div class="grid">${[["Total", a.total], ["Pending", a.pending], ["Resolved", a.resolved], ["Escalated", a.escalated], ["Overdue", a.overdue], ["Avg resolution (h)", a.avg_resolution_hours ?? "-"], ["Avg rating", a.avg_rating ?? "-"]].map(([k, v]) => `<div class="stat"><b>${v}</b>${k}</div>`).join("")}</div>
+  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))"><div><h3>By category</h3>${bars(a.by_category)}</div><div><h3>By priority</h3>${bars(a.by_priority)}</div><div><h3>By status</h3>${bars(a.by_status)}</div></div>
+  <h3>Hotspots (most repeated issues)</h3>${a.hotspots.map(h => `<div class="mute">${esc(h.code)} - ${esc(h.title)}: <b>${h.reports}</b> reports</div>`).join("") || `<span class="mute">None yet</span>`}`;
+const adminLoad = () => run(async () => {
+  const [a, deps, off, us, au, cis] = await Promise.all([api("/analytics"), api("/admin/departments"), api("/admin/officers"), api("/admin/users"), api("/admin/audit"), api("/admin/class-incharges")]);
+  window.OFF = off; window.DEPS = deps;
+  const ciOff = us.filter(u => u.department === "Class Incharge");
+  $("#cis").innerHTML = `<table><tr><th>Class</th><th>Class Incharge</th><th>Change to</th><th></th></tr>${cis.map(c => `<tr><td>${c.year === "BTech" ? "B.Tech" : esc(c.year) + " B.Tech"} - ${esc(c.section)}</td><td>${c.officer_name ? esc(c.officer_name) + `<div class="mute">${esc(c.email)}</div>` : `<span class="mute">Not assigned</span>`}</td><td><select id="ci_${c.year}_${c.section}">${ciOff.map(o => `<option value="${o.id}" ${o.id === c.officer_id ? "selected" : ""}>${esc(o.name)}${o.year ? " (" + esc(o.year) + "-" + esc(o.section) + ")" : " (no class)"}</option>`).join("")}</select></td><td><button class="sm" onclick="setCI('${c.year}','${c.section}')">Assign</button> ${c.officer_id ? `<a href="#" onclick="editStaff(${c.officer_id},'${esc(c.officer_name).replace(/'/g, "")}','${esc(c.email)}');return false">edit details</a>` : ""}</td></tr>`).join("")}</table>`;
+  $("#stats").innerHTML = statsHTML(a);
+  $("#users").innerHTML = `<table><tr><th>Name</th><th>Email</th><th>Role</th><th>Dept / Level</th><th>Alert email (real)</th></tr>${us.filter(u => u.role !== "student").map(u => `<tr><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${esc(u.role === "officer" ? "departmental" : u.role)}</td><td>${esc(u.department || (u.level || "-"))}${u.department === "Class Incharge" ? (u.year ? " (" + esc(u.year) + "-" + esc(u.section) + ")" : " (no class)") : ""}</td><td>${u.notify_email ? esc(u.notify_name || u.name) + " &lt;" + esc(u.notify_email) + "&gt;" : `<span class="mute">not set</span>`} <a href="#" onclick="setMail(${u.id},'${esc(u.notify_name || u.name).replace(/'/g, "")}','${esc(u.notify_email || "")}');return false">${u.notify_email ? "change" : "set"}</a></td></tr>`).join("")}</table>`;
+  $("#audit").innerHTML = `<table><tr><th>Time</th><th>Who</th><th>Action</th><th>Detail</th></tr>${au.slice(0, 40).map(r => `<tr><td>${when(r.at)}</td><td>${esc(r.user)}</td><td>${esc(r.action)}</td><td>${esc(r.detail)}</td></tr>`).join("")}</table>`;
+  depSel(); adminList();
+});
+const depSel = () => { const r = $("#ur").value; $("#ud").innerHTML = r === "officer" ? DEPS.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join("") : r === "authority" ? `<option value="1">Level 1 (HOD)</option><option value="2">Level 2 (Principal)</option>` : `<option value="0">-</option>`; if (window.DEPS) depSel2(); };
+const adminList = () => run(async () => { const l = await api("/complaints/assigned"); $("#list").innerHTML = l.map(c => card(c, "admin") + "").join("") || `<p class="mute">No complaints yet.</p>`; });
+const assign = id => run(async () => { await api(`/admin/complaints/${id}/assign`, { method: "POST", body: { officer_id: +$("#a" + id).value } }); toast("Reassigned"); adminLoad(); });
+const runEsc = () => run(async () => { const d = await api("/admin/run-escalation", { method: "POST" }); toast(`${d.escalated} complaint(s) escalated`); adminLoad(); });
+const setMail = (id, nm, cur) => run(async () => {
+  const name = prompt("Name to show in the email (e.g. Ms Dumne Rakhi Shivajirao):", nm); if (name === null) return;
+  const mail = prompt("Real email address for alerts (leave empty to switch alerts off):", cur); if (mail === null) return;
+  await api(`/admin/users/${id}/notify-email`, { method: "PATCH", body: { notify_email: mail, notify_name: name } }); toast("Alert email saved"); adminLoad();
+});
+const mkUser = () => run(async () => { const r = $("#ur").value, v = +$("#ud").value; await api("/admin/users", { method: "POST", body: { name: $("#un").value, email: $("#ue").value, password: $("#up").value, role: r, department_id: r === "officer" ? v : null, level: r === "authority" ? v : 0, ...(isCI() ? { year: $("#uy").value, section: $("#usec").value } : {}) } }); toast("User created"); adminLoad(); });
+const isCI = () => $("#ur").value === "officer" && (DEPS.find(d => d.id === +$("#ud").value) || {}).name === "Class Incharge";
+const depSel2 = () => { $("#clsbox").style.display = isCI() ? "block" : "none"; };
+const setCI = (y, sec) => run(async () => { const d = await api(`/admin/class-incharges/${y}/${sec}`, { method: "PUT", body: { officer_id: +$(`#ci_${y}_${sec}`).value } }); toast(d.message); adminLoad(); });
+const editStaff = (id, nm, em) => run(async () => {
+  const name = prompt("Class Incharge name:", nm); if (name === null) return;
+  const email = prompt("Login email:", em); if (email === null) return;
+  await api(`/admin/users/${id}`, { method: "PATCH", body: { name, email } }); toast("Details updated"); adminLoad();
+});
+
+/* ---------- NOTIFICATIONS ---------- */
+const loadNotes = () => S.token && api("/notifications").then(n => {
+  const u = n.filter(x => !x.is_read).length; $("#cnt").textContent = u ? `(${u})` : "";
+  $("#notes").innerHTML = n.map(x => `<p>${x.is_read ? "" : "<b>New</b> "}${esc(x.message)}<br><span class="mute">${when(x.at)}</span></p>`).join("") || `<p class="mute">No alerts</p>`;
+}).catch(() => {});
+const toggleNotes = () => { const e = $("#notes"), open = e.style.display === "block"; e.style.display = open ? "none" : "block"; if (!open) api("/notifications/read", { method: "POST" }).then(() => setTimeout(() => $("#cnt").textContent = "", 300)); };
+setInterval(loadNotes, 30000);
+const closeWelcome = () => { $("#welcome").classList.remove("show"); sessionStorage.welcomed = "1"; };
+if (!S.token && !sessionStorage.welcomed) $("#welcome").classList.add("show");
+$("#welcome").onclick = e => { if (e.target.id === "welcome") closeWelcome(); };
+fetch("/auth/config").then(r => r.json()).then(c => CFG = c).catch(() => {}).finally(render);
+</script>
+</body>
+</html>

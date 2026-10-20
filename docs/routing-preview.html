@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Routing Logic Preview</title>
+<style>
+:root{
+  --bg:#f7f7f5; --card:#fff; --ink:#1f1f1f; --mute:#6b6b6b; --line:#e4e2dd;
+  --accent:#a8532f; --accent2:#3d6b52; --err:#b3312c;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --bg:#171614; --card:#211f1c; --ink:#ece8e2; --mute:#9c968c; --line:#38352f; }
+}
+:root[data-theme="dark"]{ --bg:#171614; --card:#211f1c; --ink:#ece8e2; --mute:#9c968c; --line:#38352f; }
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.wrap{max-width:760px;margin:0 auto;padding:28px 18px 48px}
+h1{font-size:20px;margin:0 0 4px}
+.sub{color:var(--mute);font-size:14px;margin:0 0 22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 18px 20px;margin-bottom:18px}
+.card h2{font-size:15px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+.step-n{display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;align-items:center;justify-content:center;flex-shrink:0}
+label{display:block;font-size:12.5px;color:var(--mute);margin:10px 0 4px}
+input,select{width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px}
+input:disabled{color:var(--mute)}
+.row{display:flex;gap:10px}
+.row>div{flex:1}
+button{margin-top:14px;padding:10px 16px;border:none;border-radius:8px;background:var(--accent);color:#fff;font-size:14px;cursor:pointer}
+button:hover{opacity:.92}
+button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.pill{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--mute);margin-right:6px}
+.result{margin-top:14px;padding:12px 14px;border-radius:10px;font-size:13.5px;line-height:1.5}
+.ok{background:rgba(61,107,82,.12);border:1px solid rgba(61,107,82,.35)}
+.bad{background:rgba(179,49,44,.1);border:1px solid rgba(179,49,44,.35)}
+.mute{color:var(--mute)}
+code{background:var(--bg);border:1px solid var(--line);padding:1px 5px;border-radius:5px;font-size:12.5px}
+.hide{display:none}
+.who{font-size:13px;color:var(--mute);margin-top:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>How the routing actually works</h1>
+  <p class="sub">A live walkthrough of the two things we just changed: class detection from email, and picking the <em>right</em> coordinator / lab incharge instead of just "the first one".</p>
+
+  <div class="card">
+    <h2><span class="step-n">1</span> Register a student</h2>
+    <label>College email</label>
+    <input id="email" placeholder="s24_deshmukh_rutuja@mgmcen.ac.in" oninput="onEmail()">
+    <div class="row">
+      <div><label>Detected class</label><input id="yr" disabled placeholder="Type an email above"></div>
+      <div><label>Section</label><select id="sec"><option value="">—</option></select></div>
+    </div>
+    <button onclick="register()">Create student account</button>
+    <div id="regResult"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-n">2</span> Submit a complaint as that student</h2>
+    <div id="asWho" class="who">Register a student above first.</div>
+    <div class="mute" style="font-size:12px;margin-bottom:2px">Note: in the real app the AI reads your title+description and picks this category itself — it's a dropdown here just so you can test every routing path directly.</div>
+    <label>Complaint related to <span class="mute">(category)</span></label>
+    <select id="cat" onchange="onCat()">
+      <option value="Teaching & Syllabus">Teaching & Syllabus</option>
+      <option value="Lab & Equipment">Lab & Equipment</option>
+      <option value="Classroom Infrastructure">Classroom Infrastructure</option>
+      <option value="Timetable & Attendance">Timetable & Attendance</option>
+      <option value="Exams & Marks">Exams & Marks</option>
+      <option value="Projects & Placements">Projects & Placements</option>
+      <option value="Ragging & Harassment">Ragging & Harassment</option>
+      <option value="Other">Other</option>
+    </select>
+    <div id="catDesc" class="mute" style="font-size:12.5px;margin-top:5px;line-height:1.5"></div>
+    <div id="labWrap" class="hide"><label>Which lab? <span class="mute">(this is the field that makes it work)</span></label>
+      <select id="lab"><option value="">Not sure / general</option></select>
+    </div>
+    <label>Title <span class="mute">(the main complaint, one line)</span></label>
+    <input id="title" maxlength="120" placeholder="e.g. 8 computers in Lab 6 are not switching on">
+    <label>Full description <span class="mute">(20+ characters — this exact text is what the officer reads)</span></label>
+    <textarea id="desc" rows="3" style="width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-family:inherit" placeholder="Describe exactly what's wrong, since when, and how it affects you..."></textarea>
+    <button onclick="submitComplaint()">Submit complaint</button>
+    <div id="cResult"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-n">3</span> What the assigned officer actually sees</h2>
+    <div class="mute" style="font-size:13px;margin-bottom:8px">This is the point: it's not just "routed to Lab Incharge" — the officer opens their inbox and sees the exact title, description and lab number, grouped by who's assigned.</div>
+    <div id="inbox" class="mute" style="font-size:13px">No complaints submitted yet.</div>
+  </div>
+
+  <div class="card">
+    <h2>Who's seeded right now</h2>
+    <div class="mute" style="font-size:13px;margin-bottom:8px">These are the demo accounts created automatically (<code>seed.py</code>) — this is exactly why "the first officer" wasn't good enough.</div>
+    <div id="roster"></div>
+  </div>
+</div>
+
+<script>
+const ACADEMIC_YEAR_START = 2026;
+const OFFSET_TO_YEAR = {1:"SY",2:"TY",3:"BTech"};
+const SECTIONS = {SY:["A","B","C"], TY:["A","B","C"], BTech:["A","B"]};
+const LAB_SPLIT = [["Lab Incharge 1","1,2,3,4"],["Lab Incharge 2","5,6,7"],["Lab Incharge 3","8,9,10"]];
+const ROUTING = {
+  "Lab & Equipment":"Lab Incharge","Classroom Infrastructure":"Lab Incharge",
+  "Teaching & Syllabus":"Class Coordinator","Timetable & Attendance":"Timetable Coordinator",
+  "Exams & Marks":"Exam Coordinator","Projects & Placements":"Project Placement Cell",
+  "Ragging & Harassment":"HOD (sent directly, no officer step)","Other":"Admin Desk"
+};
+const CAT_DESC = {
+  "Teaching & Syllabus":"Faculty not covering syllabus, lectures not conducted, doubts not cleared, teaching quality issues.",
+  "Lab & Equipment":"Computers/systems not working, software missing, printers, servers, lab machines and equipment.",
+  "Classroom Infrastructure":"Projector, wifi, fans/lights, benches, washrooms — physical problems with the classroom or building.",
+  "Timetable & Attendance":"Timetable clashes, wrong attendance marked, schedule/batch issues.",
+  "Exams & Marks":"Hall tickets, results, marks missing, revaluation, question paper errors.",
+  "Projects & Placements":"Project guide issues, internship/placement problems, company visit complaints.",
+  "Ragging & Harassment":"Ragging, bullying, harassment or threats — sensitive, so this always goes straight to the HOD, never an officer.",
+  "Other":"Anything that doesn't fit above — goes to the Admin Desk for manual triage."
+};
+let student = null, tickets = [];
+
+function detectYear(email){
+  const m = /^s(\d{2})_/.exec((email||"").split("@")[0].toLowerCase());
+  if(!m) return null;
+  return OFFSET_TO_YEAR[ACADEMIC_YEAR_START - (2000+parseInt(m[1],10))] || null;
+}
+function onEmail(){
+  const y = detectYear($("email").value);
+  $("yr").value = y || (($("email").value.split("@")[0]||"").match(/^s\d{2}_/) ? "Not an active class" : "");
+  const secs = SECTIONS[y]||[];
+  $("sec").innerHTML = secs.length ? secs.map(s=>`<option>${s}</option>`).join("") : `<option value="">—</option>`;
+}
+function register(){
+  const email = $("email").value.trim(), sec = $("sec").value, y = detectYear(email);
+  const box = $("regResult");
+  if(!email.includes("@")){ box.innerHTML = bad("Enter an email first."); return; }
+  if(!y){ box.innerHTML = bad("This email's admission year doesn't match SY, TY or BTech — same check the real backend runs, so registration would be rejected here too."); return; }
+  if(!sec){ box.innerHTML = bad("Pick a section."); return; }
+  student = {email, year:y, section:sec};
+  box.innerHTML = ok(`Registered as <b>${y}-${sec}</b> (derived from <code>${email.split("@")[0]}</code>, never asked as a dropdown).`);
+  $("asWho").innerHTML = `Submitting as: <b>${email}</b> — <span class="pill">${y}-${sec}</span>`;
+  $("cResult").innerHTML = "";
+}
+function onCat(){
+  $("labWrap").classList.toggle("hide", !["Lab & Equipment","Classroom Infrastructure"].includes($("cat").value));
+  $("catDesc").textContent = CAT_DESC[$("cat").value] || "";
+}
+function pickOfficer(office, s, lab){
+  if(office === "Class Coordinator"){
+    return s ? `Class Coordinator for <b>${s.year}-${s.section}</b> (coord_${s.year.toLowerCase()}_${s.section.toLowerCase()})` : "Class Coordinator (no student class known)";
+  }
+  if(office === "Lab Incharge"){
+    if(!lab) return "Lab Incharge 1 (fallback — no lab number given)";
+    const hit = LAB_SPLIT.find(([,nums]) => nums.split(",").includes(String(lab)));
+    return hit ? `${hit[0]} (owns labs ${hit[1]})` : "Lab Incharge 1 (fallback)";
+  }
+  if(office.startsWith("HOD")) return office;
+  return office + " (one officer, no split needed)";
+}
+function submitComplaint(){
+  const box = $("cResult");
+  if(!student){ box.innerHTML = bad("Register a student in step 1 first."); return; }
+  const cat = $("cat").value, lab = $("lab").value, title = $("title").value.trim(), desc = $("desc").value.trim();
+  if(title.length < 5){ box.innerHTML = bad("Title must be at least 5 characters — this is the \"main complaint\" line."); return; }
+  if(desc.length < 20){ box.innerHTML = bad("Description must be at least 20 characters — write what's actually wrong."); return; }
+  if(["Lab & Equipment","Classroom Infrastructure"].includes(cat) && !lab){ box.innerHTML = bad("Pick a lab number — without it there's no way to know which lab this is about."); return; }
+  const office = ROUTING[cat];
+  const who = pickOfficer(office, student, lab);
+  const code = "CMP-2026-" + String(tickets.length+1).padStart(5,"0");
+  tickets.push({code, title, desc, cat, lab, who, student});
+  box.innerHTML = ok(`<b>${code}</b> submitted → routed to <b>${who}</b>.`);
+  $("title").value = ""; $("desc").value = "";
+  renderInbox();
+}
+function renderInbox(){
+  const box = $("inbox");
+  if(!tickets.length){ box.innerHTML = "No complaints submitted yet."; return; }
+  const groups = {};
+  tickets.forEach(t => { (groups[t.who] = groups[t.who]||[]).push(t); });
+  box.innerHTML = Object.entries(groups).map(([who, ts]) => `
+    <div style="margin-bottom:14px">
+      <div style="font-weight:600;font-size:13.5px;margin-bottom:6px">📥 ${who}</div>
+      ${ts.map(t => `
+        <div style="border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:6px;font-size:13px">
+          <div><b>${esc(t.title)}</b> <span class="pill">${esc(t.code)}</span> <span class="pill">${esc(t.cat)}</span>${t.lab?`<span class="pill">Lab ${t.lab}</span>`:""}</div>
+          <div class="mute" style="margin-top:4px">${esc(t.desc)}</div>
+          <div class="mute" style="margin-top:4px;font-size:11.5px">From: ${esc(t.student.email)} (${t.student.year}-${t.student.section})</div>
+        </div>`).join("")}
+    </div>`).join("");
+}
+function esc(s){ return (s||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function ok(t){ return `<div class="result ok">${t}</div>`; }
+function bad(t){ return `<div class="result bad">${t}</div>`; }
+function $(id){ return document.getElementById(id); }
+
+// lab dropdown + roster
+$("lab") || 0;
+document.getElementById("labWrap").querySelector("select#lab").innerHTML =
+  `<option value="">Not sure / general</option>` + Array.from({length:10},(_,i)=>i+1).map(n=>`<option value="${n}">Lab ${n}</option>`).join("");
+
+const roster = [
+  ...LAB_SPLIT.map(([n,labs])=>`<div class="pill">${n} — labs ${labs}</div>`),
+  ...Object.entries(SECTIONS).flatMap(([y,secs])=>secs.map(s=>`<div class="pill">${y}-${s} Coordinator</div>`)),
+  `<div class="pill">Timetable Coordinator</div>`,`<div class="pill">Exam Coordinator</div>`,
+  `<div class="pill">Project Placement Cell</div>`,`<div class="pill">Admin Desk</div>`,`<div class="pill">HOD</div>`
+].join("");
+document.getElementById("roster").innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:6px">${roster}</div>`;
+onCat();
+</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+# Secrets - never commit your real .env (copy .env.example to .env and fill it in locally)
+.env
+backend/.env
+
+# Local database and uploaded evidence files (contain real people's data)
+backend/complaints.db
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Trained AI model (the app retrains this itself on first run, so it doesn't need to be in the repo)
+ml/model.joblib
+ml/model.version
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+.vscode/

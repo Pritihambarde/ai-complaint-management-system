@@ -1,0 +1,23 @@
+"""Builds a STARTER dataset for the Computer Science department (8 categories, ~20 base complaints each x 7 variants). Replace/extend with 500-1000+ real, reviewed rows for the final demo."""
+import csv, random
+from extra_data import EXTRA, MORE
+random.seed(1)
+DATA = {
+ "Lab & Equipment": ["Computers in the CS lab are not working and keep hanging", "Required software like Python and the Java IDE is not installed in the lab systems", "Lab systems have no internet connection during practical sessions", "Not enough computers in the lab so three students share one system", "Lab keyboards and mouse are broken and need replacement", "The lab stays locked and the lab assistant is not available in practical hours", "The department lab server is down and we cannot submit our programs"],
+ "Teaching & Syllabus": ["Faculty is not completing the syllabus of Data Structures on time", "Professor is frequently absent from lectures and no substitute is arranged", "Subject teacher does not clear doubts and only reads from the slides", "No lectures are conducted for Operating Systems for two weeks", "Teaching pace is too fast and students cannot understand the topics", "Lab manual is not provided and practical topics are not explained properly", "We have no regular teacher for Database Management this semester"],
+ "Timetable & Attendance": ["Our timetable keeps changing without any notice", "Attendance was wrongly marked absent although I was present in class", "Two lectures are scheduled at the same time for our division", "Attendance shortage list is wrong and I am not allowed to sit for the exam", "The timetable is overloaded and no free slot is given for practical batches", "Attendance portal is not updated and shows old records", "Lecture timing clashes with the lab session every Wednesday"],
+ "Exams & Marks": ["Internal marks are not shared by the department", "My unit test marks are wrong and I want re-evaluation", "Exam hall ticket has not been issued yet", "Semester result is not declared and my marks are missing", "Question paper had questions out of syllabus", "Practical exam schedule has not been announced", "Marks in the mid semester exam were added incorrectly"],
+ "Projects & Placements": ["No project guide has been assigned to our final year group", "Project guide is not available to review our work and give suggestions", "Placement training classes are not conducted for computer science students", "Please arrange internship opportunities in software companies", "Our mini project presentation date has not been announced", "Companies visiting for campus placement are not informed to all students", "Project group allocation is unfair and some students are left without a team"],
+ "Ragging & Harassment": ["Senior students are threatening us in the hostel at night", "Seniors are forcing juniors to do their assignments and abusing them", "I am being bullied and harassed by seniors daily in the department", "Ragging is happening in the lab, seniors beat freshers", "Seniors forced us to sing and dance and threatened us if we refuse", "A group of students is harassing me and asking money with threats", "Freshers are being humiliated and abused by senior students"],
+ "Classroom Infrastructure": ["Classroom projector is not working", "Wifi in the department is very slow and disconnects", "Classroom fans and lights are not working", "Washrooms near the CS department are not clean", "Benches in the classroom are broken and unsafe to sit on", "Drinking water cooler on our floor is broken", "The classroom is too hot and the air is stuffy since the windows are stuck"],
+ "Other": ["I want to suggest starting a coding club in our department", "Please consider organising a hackathon for computer science students", "Would like a career guidance session for students", "Request for a bonafide certificate for a bank account", "Need information about the department annual function", "Suggest adding a suggestion box near the department office", "Requesting an ID card duplicate copy"],
+}
+for _c, _t in EXTRA.items():
+    DATA[_c] = DATA[_c] + _t + MORE[_c]
+PRE = ["", "", "Sir, ", "Respected madam, ", "Urgent: ", "I want to complain that ", "Please help. "]
+SUF = ["", "", " Please take action.", " This is happening for many days.", " Kindly resolve this soon.", " Many students are facing this."]
+rows = [(random.choice(PRE) + t[0].lower() + t[1:] + random.choice(SUF), c, f"{c}-{i}") for c, ts in DATA.items() for i, t in enumerate(ts) for _ in range(7)]
+random.shuffle(rows)
+with open("data/complaints.csv", "w", newline="") as f:
+    w = csv.writer(f); w.writerow(["text", "category", "group"]); w.writerows(rows)
+print(len(rows), "rows written")
